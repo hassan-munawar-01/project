@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bol-achan</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-size: cover;
+    }
+
+      .chat-container {
+    position: relative; /* needed for overlay */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('/media/sardaar.jpg');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0.2; /* Low opacity */
+    z-index: -1; /* Behind content */
+  }
+
+    .chat-header {
+      background-color: #075e54;
+      color: white;
+      padding: 15px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .language-selector {
+      padding: 10px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-history {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .user-msg {
+      align-self: flex-end;
+      background-color: #dcf8c6;
+      border-bottom-right-radius: 0;
+    }
+
+    .bot-msg {
+      align-self: flex-start;
+      background-color: white;
+      border-bottom-left-radius: 0;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-input-area {
+      display: flex;
+      padding: 10px;
+      background: #383838;
+    }
+
+    .chat-input-area input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+    }
+
+    .chat-input-area button {
+      margin-left: 10px;
+      background-color: #075e54;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .chat-input-area button:hover {
+      background-color: #0a7d66;
+    }
+    
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-header">Bol-Bachan</div>
+
+    <div class="language-selector">
+      <label for="lang-select">Language:</label>
+      <select id="lang-select" name="lang">
+        <option value="en">English</option>
+        <option value="ur">Urdu</option>
+        <option value="rp">Roman Punjabi</option>
+      </select>
+    </div>
+
+    <div class="chat-history" id="chatHistory"></div>
+
+    <div class="chat-input-area">
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button type="button" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function () {
+      const chatHistory = sessionStorage.getItem("chatHistory");
+      if (chatHistory) {
+        document.getElementById("chatHistory").innerHTML = chatHistory;
+        scrollToBottom();
+      }
+    };
+
+    function sendMessage() {
+      const userInputField = document.getElementById('userInput');
+      const userInput = userInputField.value.trim();
+      const lang = document.getElementById('lang-select').value;
+
+      if (!userInput) return;
+
+      fetch(`/get_response/?user_input=${encodeURIComponent(userInput)}&lang=${lang}`)
+        .then(response => response.json())
+        .then(data => {
+          const botResponse = data.response;
+          const chatBox = document.getElementById("chatHistory");
+
+          const userMsg = `<div class="message user-msg">👤 You: ${userInput}</div>`;
+          const botMsg = `<div class="message bot-msg">👳‍♂️ sardaar: ${botResponse}</div>`;
+
+          chatBox.innerHTML += userMsg + botMsg;
+          sessionStorage.setItem("chatHistory", chatBox.innerHTML);
+
+          userInputField.value = "";
+          scrollToBottom();
+        })
+        .catch(err => console.error("Fetch error:", err));
+    }
+
+    function scrollToBottom() {
+      const chatBox = document.getElementById("chatHistory");
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
